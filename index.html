@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Downloads — Süt Kutusu Oyunu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0d0d0d;
+      font-family: 'Roboto', sans-serif;
+      color: #ccc;
+      min-height: 100vh;
+      padding: 3rem 1.5rem;
+    }
+
+    a { color: inherit; }
+
+    header {
+      max-width: 700px;
+      margin: 0 auto 3rem;
+    }
+
+    header a.back {
+      font-size: 0.85rem;
+      color: #555;
+      text-decoration: none;
+      letter-spacing: 1px;
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      transition: color 0.15s;
+    }
+    header a.back:hover { color: #ffe600; }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, #ff4444, #ff9900, #ffe600, #44cc66, #4499ff, #aa44ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.4rem;
+    }
+
+    header p {
+      color: #444;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .games {
+      max-width: 700px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      border-top: 1px solid #1e1e1e;
+    }
+
+    /* ── GAME CARD ── */
+    .game {
+      border-bottom: 1px solid #1e1e1e;
+      padding: 1.75rem 0;
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .game-thumb {
+      width: 120px;
+      height: 80px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #1a1a1a;
+      display: block;
+      border: 1px solid #222;
+    }
+
+    .game-thumb.placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .game-info { flex: 1; }
+
+    .game-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.3rem;
+    }
+
+    .game-desc {
+      font-size: 0.85rem;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .game-meta {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid #2a2a2a;
+      color: #555;
+    }
+
+    .badge.ready { border-color: #ffe600; color: #ffe600; }
+    .badge.coming { border-color: #333; color: #444; }
+
+    .download-btn {
+      display: inline-block;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #0d0d0d;
+      background: #ffe600;
+      padding: 0.45rem 1.1rem;
+      border-radius: 4px;
+      transition: background 0.15s, transform 0.1s;
+      letter-spacing: 0.5px;
+    }
+    .download-btn:hover { background: #fff; transform: translateY(-1px); }
+
+    .download-btn.disabled {
+      background: #1a1a1a;
+      color: #333;
+      cursor: not-allowed;
+      border: 1px solid #222;
+    }
+    .download-btn.disabled:hover { transform: none; background: #1a1a1a; }
+
+    /* ── COMING SOON CARD ── */
+    .game.upcoming .game-title { color: #333; }
+    .game.upcoming .game-thumb.placeholder { opacity: 0.4; }
+
+    @media (max-width: 480px) {
+      .game { grid-template-columns: 1fr; }
+      .game-thumb { width: 100%; height: 140px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="https://sutkutusuoyunu.github.io/">&#8592; Back to hub</a>
+  <h1>Downloads</h1>
+  <p>Süt Kutusu Oyunu series</p>
+</header>
+
+<div class="games">
+
+  <!-- ═══════════════════════════════════════════
+       GAME 1 — READY
+       To add a thumbnail: replace the .placeholder div
+       with <img class="game-thumb" src="your-image.jpg" alt="...">
+       To update the download link: change href="#" to your
+       Google Drive / MEGA / GitHub Releases link
+  ════════════════════════════════════════════ -->
+  <div class="game">
+    <div class="game-thumb placeholder">No image</div>
+    <div class="game-info">
+      <div class="game-title">Süt Kutusu Oyunu 1</div>
+      <p class="game-desc">
+        <!-- Add a short description of the game here -->
+        The first game in the series.
+      </p>
+      <div class="game-meta">
+        <span class="badge ready">Available</span>
+        <span class="badge">Windows</span>
+        <span class="badge">~??? MB</span> <!-- update with real size -->
+      </div>
+      <a class="download-btn" href="#">Download</a> <!-- replace # with real link -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       GAMES 2–6 — COMING SOON
+       When a game is ready: remove the "upcoming" class,
+       change badge from "coming" to "ready", enable the button,
+       add a real description, thumbnail, and download link.
+  ════════════════════════════════════════════ -->
+
+  <div class="game upcoming">
+    <div class="game-thumb placeholder">Coming soon</div>
+    <div class="game-info">
+      <div class="game-title">Süt Kutusu Oyunu 2</div>
+      <p class="game-desc">Coming soon.</p>
+      <div class="game-meta">
+        <span class="badge coming">Coming soon</span>
+      </div>
+      <a class="download-btn disabled" href="#">Not available yet</a>
+    </div>
+  </div>
+
+  <div class="game upcoming">
+    <div class="game-thumb placeholder">Coming soon</div>
+    <div class="game-info">
+      <div class="game-title">Süt Kutusu Oyunu 3</div>
+      <p class="game-desc">Coming soon.</p>
+      <div class="game-meta">
+        <span class="badge coming">Coming soon</span>
+      </div>
+      <a class="download-btn disabled" href="#">Not available yet</a>
+    </div>
+  </div>
+
+  <div class="game upcoming">
+    <div class="game-thumb placeholder">Coming soon</div>
+    <div class="game-info">
+      <div class="game-title">Süt Kutusu Oyunu 4</div>
+      <p class="game-desc">Coming soon.</p>
+      <div class="game-meta">
+        <span class="badge coming">Coming soon</span>
+      </div>
+      <a class="download-btn disabled" href="#">Not available yet</a>
+    </div>
+  </div>
+
+  <div class="game upcoming">
+    <div class="game-thumb placeholder">Coming soon</div>
+    <div class="game-info">
+      <div class="game-title">Süt Kutusu Oyunu 5</div>
+      <p class="game-desc">Coming soon.</p>
+      <div class="game-meta">
+        <span class="badge coming">Coming soon</span>
+      </div>
+      <a class="download-btn disabled" href="#">Not available yet</a>
+    </div>
+  </div>
+
+  <div class="game upcoming">
+    <div class="game-thumb placeholder">Coming soon</div>
+    <div class="game-info">
+      <div class="game-title">Süt Kutusu Oyunu 6</div>
+      <p class="game-desc">Coming soon.</p>
+      <div class="game-meta">
+        <span class="badge coming">Coming soon</span>
+      </div>
+      <a class="download-btn disabled" href="#">Not available yet</a>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
