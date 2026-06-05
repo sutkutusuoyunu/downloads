@@ -37,10 +37,11 @@
     header h1 {
       font-size: 2rem;
       font-weight: 900;
-      background: linear-gradient(90deg, #ff4444, #ff9900, #ffe600, #44cc66, #4499ff, #aa44ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+background: linear-gradient(90deg, #ff4444, #ff9900, #ffe600, #44cc66, #4499ff, #aa44ff);
+background-size: 400px 100%;
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
       margin-bottom: 0.4rem;
     }
 
@@ -160,7 +161,14 @@
   </style>
 </head>
 <body>
-
+<style>
+  body {
+    background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('background.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+</style>
 <header>
   <a class="back" href="https://sutkutusuoyunu.github.io/">&#8592; Back to hub</a>
   <h1>Downloads</h1>
