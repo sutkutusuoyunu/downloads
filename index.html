@@ -38,11 +38,11 @@
     header h1 {
       font-size: 2rem;
       font-weight: 900;
-background: linear-gradient(90deg, #ff4444, #ff9900, #ffe600, #44cc66, #4499ff, #aa44ff);
-background-size: 400px 100%;
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-background-clip: text;
+      background: linear-gradient(90deg, #ff4444, #ff9900, #ffe600, #44cc66, #4499ff, #aa44ff);
+      background-size: 400px 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       margin-bottom: 0.4rem;
     }
 
@@ -62,7 +62,6 @@ background-clip: text;
       border-top: 1px solid #1e1e1e;
     }
 
-    /* ── GAME CARD ── */
     .game {
       border-bottom: 1px solid #1e1e1e;
       padding: 1.75rem 0;
@@ -151,7 +150,20 @@ background-clip: text;
     }
     .download-btn.disabled:hover { transform: none; background: #1a1a1a; }
 
-    /* ── COMING SOON CARD ── */
+    .about-btn {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #0d0d0d;
+      background: #ffe600;
+      padding: 0.45rem 1.1rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      letter-spacing: 0.5px;
+    }
+    .about-btn:hover { background: #fff; transform: translateY(-1px); }
+
     .game.upcoming .game-title { color: #333; }
     .game.upcoming .game-thumb.placeholder { opacity: 0.4; }
 
@@ -170,6 +182,7 @@ background-clip: text;
     background-attachment: fixed;
   }
 </style>
+
 <header>
   <a class="back" href="https://sutkutusuoyunu.github.io/">&#8592; Geri</a>
   <h1>Downloads</h1>
@@ -178,36 +191,37 @@ background-clip: text;
 
 <div class="games">
 
-  <!-- ═══════════════════════════════════════════
-       GAME 1 — READY
-       To add a thumbnail: replace the .placeholder div
-       with <img class="game-thumb" src="your-image.jpg" alt="...">
-       To update the download link: change href="#" to your
-       Google Drive / MEGA / GitHub Releases link
-  ════════════════════════════════════════════ -->
   <div class="game">
- <img class="game-thumb" src="game1.jpg" alt="Süt Kutusu Oyunu 1">
+    <img class="game-thumb" src="game1.jpg" alt="Süt Kutusu Oyunu 1">
     <div class="game-info">
       <div class="game-title">Süt Kutusu Oyunu 1</div>
-      <p class="game-desc">
-        <!-- Add a short description of the game here -->
-        Paşa süt kutusunu camdan aşağı atıyor.
-      </p>
+      <p class="game-desc">Paşa süt kutusunu camdan aşağı atıyor.</p>
       <div class="game-meta">
         <span class="badge ready">Kullanılabilir</span>
         <span class="badge ready">Windows</span>
-        <span class="badge ready">~201 MB</span> <!-- update with real size -->
+        <span class="badge ready">~201 MB</span>
       </div>
-      <a class="download-btn" href="https://mega.nz/file/tmEwnKwK#owKh6azW0HKAHverVmeYHvYLihR9fORSY_PHqGmYskQ">Download</a> <!-- replace # with real link -->
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+        <a class="download-btn" href="https://mega.nz/file/tmEwnKwK#owKh6azW0HKAHverVmeYHvYLihR9fORSY_PHqGmYskQ">Download</a>
+        <button class="about-btn" onclick="document.getElementById('popup-sko1').style.display='flex'">About</button>
+      </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════
-       GAMES 2–6 — COMING SOON
-       When a game is ready: remove the "upcoming" class,
-       change badge from "coming" to "ready", enable the button,
-       add a real description, thumbnail, and download link.
-  ════════════════════════════════════════════ -->
+  <!-- SKO1 POPUP — edit the text inside the <p> tag -->
+  <div id="popup-sko1" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:center;justify-content:center;padding:1.5rem;">
+    <div style="background:#111;border:1px solid #2a2a2a;border-radius:10px;max-width:440px;width:100%;padding:2rem;position:relative;">
+      <button onclick="document.getElementById('popup-sko1').style.display='none'" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#555;font-size:1.2rem;cursor:pointer;">&#x2715;</button>
+      <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:0.75rem;">Süt Kutusu Oyunu 1</div>
+      <p style="font-size:0.88rem;color:#666;line-height:1.8;">
+        <!-- Write the about text for SKO1 here -->
+        Visual novel oyunu Ren'py yapım
+        Mouse1: ileri
+        Mouse2: Geri
+        Not: Ayarlar sekmesine kesinlikle dokunmayın, oyunu bozuyor.
+      </p>
+    </div>
+  </div>
 
   <div class="game upcoming">
     <div class="game-thumb placeholder">Coming soon</div>
@@ -270,6 +284,5 @@ background-clip: text;
   </div>
 
 </div>
-
 </body>
 </html>
