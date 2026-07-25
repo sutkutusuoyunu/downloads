@@ -36,7 +36,6 @@
     position:relative;
     overflow-x:hidden;
   }
-  #stars{ position:fixed; inset:0; z-index:0; pointer-events:none; }
   .wrap{max-width:700px;margin:0 auto;padding:36px 20px 90px;position:relative;z-index:1;}
   .back{
     font-size:13px; text-decoration:none; color:var(--text-dim);
@@ -44,29 +43,13 @@
   }
   .back:hover{color:var(--text);}
 
-  header.hero{margin:34px 0 30px;}
-  h1.grad{
-    font-size:clamp(28px,5.5vw,40px);
-    font-weight:800;
-    margin:0 0 8px;
-    letter-spacing:.2px;
-    background:linear-gradient(90deg, var(--grad-a), var(--grad-b) 55%, var(--grad-c));
-    -webkit-background-clip:text;
-    background-clip:text;
-    color:transparent;
-  }
+  header.hero{margin:34px 0 24px;}
   .eyebrow{
     margin:0;
     font-size:12px;
     letter-spacing:.18em;
     text-transform:uppercase;
     color:var(--text-faint);
-  }
-  .hero-divider{
-    height:1px;
-    margin:26px 0 0;
-    background:linear-gradient(90deg, var(--grad-a), var(--grad-b), var(--grad-c), transparent);
-    opacity:.5;
   }
 
   /* game info card */
@@ -109,6 +92,15 @@
     font-size:.85rem;
     color:var(--text-dim);
     line-height:1.6;
+  }
+  .game-header-details{
+    font-size:.85rem;
+    color:var(--text-dim);
+    line-height:1.8;
+    white-space:pre-wrap;
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid var(--line);
   }
   @media (max-width:480px){
     .game-header{ grid-template-columns:1fr; }
@@ -210,17 +202,52 @@
   .nick-inline{font-size:12px;color:var(--text-faint);margin:-8px 0 18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .nick-inline .nick-badge{font-size:12px;}
   .nick-inline button{padding:3px 10px;font-size:11px;}
+
+  .shot-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .shot-btn{
+    font-size:12.5px;
+    padding:8px 14px;
+    background:transparent;
+    color:var(--text-dim);
+    border:1px dashed var(--line);
+  }
+  .shot-btn:hover{color:var(--text); border-color:var(--text-faint); opacity:1;}
+  .shot-preview{position:relative; display:inline-block;}
+  .shot-preview img{
+    height:56px; width:56px; object-fit:cover; border-radius:8px; border:1px solid var(--line); display:block;
+  }
+  .shot-preview .shot-remove{
+    position:absolute; top:-6px; right:-6px;
+    width:18px; height:18px; border-radius:50%;
+    background:var(--danger); color:#fff; border:none;
+    font-size:11px; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .shot-hint{font-size:11.5px; color:var(--text-faint);}
+  .post-screenshot{
+    margin-top:10px;
+    max-width:260px;
+    max-height:200px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    cursor:pointer;
+    display:block;
+  }
+  .lightbox{
+    position:fixed; inset:0; background:rgba(0,0,0,0.85);
+    display:none; align-items:center; justify-content:center;
+    z-index:1000; padding:24px; cursor:zoom-out;
+  }
+  .lightbox.open{display:flex;}
+  .lightbox img{max-width:100%; max-height:100%; border-radius:8px;}
 </style>
 </head>
 <body>
-<canvas id="stars"></canvas>
 <div class="wrap">
-  <a class="back" href="https://sutkutusuoyunu.github.io/">← Geri</a>
+  <a class="back" href="https://sutkutusuoyunu.github.io/downloads/">← Geri</a>
 
   <header class="hero">
-    <h1 class="grad" id="page-title">Yorumlar</h1>
     <p class="eyebrow" id="page-eyebrow">Süt Kutusu Oyunu</p>
-    <div class="hero-divider"></div>
   </header>
 
   <div id="status">Bağlanıyor…</div>
@@ -230,6 +257,7 @@
     <div>
       <div class="game-header-title" id="game-header-title"></div>
       <div class="game-header-desc" id="game-header-desc"></div>
+      <div class="game-header-details hidden" id="game-header-details"></div>
     </div>
   </div>
 
@@ -240,6 +268,15 @@
     <div id="comment-form">
       <div class="field">
         <textarea id="comment-body" maxlength="2000" placeholder="Bu oyun hakkında ne düşünüyorsun?"></textarea>
+      </div>
+      <div class="shot-row">
+        <input type="file" id="comment-shot-input" accept="image/*" class="hidden">
+        <button type="button" class="ghost shot-btn" id="btn-add-shot">📷 Ekran görüntüsü ekle</button>
+        <div class="shot-preview hidden" id="shot-preview">
+          <img id="shot-preview-img" src="" alt="">
+          <button type="button" class="shot-remove" id="shot-remove">✕</button>
+        </div>
+        <span class="shot-hint">JPG/PNG, en fazla 5MB</span>
       </div>
       <button id="btn-comment">Gönder</button>
     </div>
@@ -255,31 +292,9 @@
   <footer>Süt Kutusu Oyunu Forumu, tüm haklar saklı</footer>
 </div>
 
-<script>
-// starfield background
-(function(){
-  const c = document.getElementById('stars');
-  const ctx = c.getContext('2d');
-  function resize(){ c.width = innerWidth; c.height = document.body.scrollHeight; }
-  resize();
-  window.addEventListener('resize', resize);
-  const stars = Array.from({length:140}, () => ({
-    x: Math.random()*c.width, y: Math.random()*c.height,
-    r: Math.random()*1.4+0.3, o: Math.random()*0.6+0.2
-  }));
-  function draw(){
-    ctx.clearRect(0,0,c.width,c.height);
-    for (const s of stars){
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(255,255,255,${s.o})`;
-      ctx.fill();
-    }
-  }
-  draw();
-  setInterval(()=>{ resize(); draw(); }, 4000);
-})();
-</script>
+<div class="lightbox" id="lightbox">
+  <img id="lightbox-img" src="" alt="">
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -290,6 +305,9 @@ import {
   getFirestore, collection, doc, addDoc, getDocs, getDoc,
   deleteDoc, query, orderBy, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL, deleteObject
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 /* =========================================================
    FIREBASE CONFIG (same project as forum/login)
@@ -311,12 +329,17 @@ const LOGIN_URL = 'https://sutkutusuoyunu.github.io/login/';
 // `image` should point at the same thumbnail used on the downloads page
 // (e.g. "game1.jpg"); leave it empty to fall back to a placeholder box.
 const GAMES = {
-  sko1: { title: 'Süt Kutusu Oyunu 1', desc: 'Paşa süt kutusunu camdan aşağı atıyor.', image: 'game1.jpg' },
-  sko2: { title: 'Süt Kutusu Oyunu 2', desc: 'Coming soon.', image: '' },
-  sko3: { title: 'Süt Kutusu Oyunu 3', desc: 'Coming soon.', image: '' },
-  sko4: { title: 'Süt Kutusu Oyunu 4', desc: 'Coming soon.', image: '' },
-  sko5: { title: 'Süt Kutusu Oyunu 5', desc: 'Coming soon.', image: '' },
-  sko6: { title: 'Süt Kutusu Oyunu 6', desc: 'Coming soon.', image: '' },
+  sko1: {
+    title: 'Süt Kutusu Oyunu 1',
+    desc: 'Paşa süt kutusunu camdan aşağı atıyor.',
+    image: 'game1.jpg',
+    details: 'Visual novel oyunu, Ren\'py yapım\nMouse1: ileri\nMouse2: Geri\nNot: Ayarlar sekmesine kesinlikle dokunmayın, oyunu bozuyor.'
+  },
+  sko2: { title: 'Süt Kutusu Oyunu 2', desc: 'Coming soon.', image: '', details: '' },
+  sko3: { title: 'Süt Kutusu Oyunu 3', desc: 'Coming soon.', image: '', details: '' },
+  sko4: { title: 'Süt Kutusu Oyunu 4', desc: 'Coming soon.', image: '', details: '' },
+  sko5: { title: 'Süt Kutusu Oyunu 5', desc: 'Coming soon.', image: '', details: '' },
+  sko6: { title: 'Süt Kutusu Oyunu 6', desc: 'Coming soon.', image: '', details: '' },
 };
 
 const params = new URLSearchParams(location.search);
@@ -336,7 +359,6 @@ const statusEl = document.getElementById('status');
 if (!game){
   statusEl.textContent = 'Geçersiz veya eksik oyun. Lütfen indirme sayfasından tekrar dene.';
 } else {
-  document.getElementById('page-title').textContent = 'Yorumlar';
   document.getElementById('page-eyebrow').textContent = game.title;
   document.title = `Yorumlar — ${game.title}`;
   renderGameHeader(game);
@@ -351,6 +373,14 @@ function renderGameHeader(game){
 
   titleEl.textContent = game.title;
   descEl.textContent = game.desc || '';
+
+  const detailsEl = document.getElementById('game-header-details');
+  if (game.details){
+    detailsEl.textContent = game.details;
+    detailsEl.classList.remove('hidden');
+  } else {
+    detailsEl.classList.add('hidden');
+  }
 
   if (game.image){
     thumbEl.src = game.image;
@@ -369,12 +399,13 @@ function renderGameHeader(game){
 }
 
 function initComments(){
-  let app, db, auth;
+  let app, db, auth, storage;
   let firebaseReady = false;
   try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     auth = getAuth(app);
+    storage = getStorage(app);
     firebaseReady = true;
   } catch (e) {
     console.error("Firebase init failed", e);
@@ -385,6 +416,47 @@ function initComments(){
   let currentUser = null;
   let currentNickname = null;
   let currentAvatar = null;
+  let selectedShotFile = null;
+
+  const shotInput = document.getElementById('comment-shot-input');
+  const shotBtn = document.getElementById('btn-add-shot');
+  const shotPreview = document.getElementById('shot-preview');
+  const shotPreviewImg = document.getElementById('shot-preview-img');
+  const shotRemoveBtn = document.getElementById('shot-remove');
+
+  shotBtn.onclick = () => shotInput.click();
+  shotInput.onchange = () => {
+    const file = shotInput.files && shotInput.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')){
+      alert('Lütfen bir resim dosyası seç.');
+      shotInput.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024){
+      alert('Resim 5MB\'dan küçük olmalı.');
+      shotInput.value = '';
+      return;
+    }
+    selectedShotFile = file;
+    shotPreviewImg.src = URL.createObjectURL(file);
+    shotPreview.classList.remove('hidden');
+    shotBtn.classList.add('hidden');
+  };
+  shotRemoveBtn.onclick = () => {
+    selectedShotFile = null;
+    shotInput.value = '';
+    shotPreview.classList.add('hidden');
+    shotBtn.classList.remove('hidden');
+  };
+
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  lightbox.onclick = () => lightbox.classList.remove('open');
+  function openLightbox(src){
+    lightboxImg.src = src;
+    lightbox.classList.add('open');
+  }
 
   const userProfileCache = new Map();
   async function getUserProfile(uid){
@@ -468,9 +540,14 @@ function initComments(){
               ${isMine ? `<button class="small-link" data-comment="${id}">sil</button>` : ''}
             </div>
             <div class="post-body">${escapeHtml(c.body)}</div>
+            ${c.screenshotURL ? `<img class="post-screenshot" data-full="${escapeHtml(c.screenshotURL)}" src="${escapeHtml(c.screenshotURL)}" alt="ekran görüntüsü">` : ''}
           </div>`;
         if (isMine){
-          div.querySelector('[data-comment]').onclick = () => deleteOwnComment(id);
+          div.querySelector('[data-comment]').onclick = () => deleteOwnComment(id, c.screenshotPath);
+        }
+        const shotImg = div.querySelector('.post-screenshot');
+        if (shotImg){
+          shotImg.onclick = () => openLightbox(shotImg.dataset.full);
         }
         el.appendChild(div);
       });
@@ -479,10 +556,13 @@ function initComments(){
     }
   }
 
-  async function deleteOwnComment(commentId){
+  async function deleteOwnComment(commentId, screenshotPath){
     if (!confirm('Bu yorumu silmek istediğine emin misin?')) return;
     try {
       await deleteDoc(doc(db, 'game_comments', gameId, 'comments', commentId));
+      if (screenshotPath){
+        try { await deleteObject(ref(storage, screenshotPath)); } catch(e){ console.warn('screenshot delete failed', e); }
+      }
       loadComments();
     } catch(e){
       alert('Silinemedi: ' + e.message);
@@ -492,19 +572,36 @@ function initComments(){
   document.getElementById('btn-comment').onclick = async () => {
     if (!currentUser) return;
     const body = document.getElementById('comment-body').value.trim();
-    if (!body) return;
+    if (!body && !selectedShotFile) return;
     const btn = document.getElementById('btn-comment');
     btn.disabled = true;
+    const originalLabel = btn.textContent;
     try {
+      let screenshotURL = null;
+      let screenshotPath = null;
+      if (selectedShotFile){
+        btn.textContent = 'Yükleniyor…';
+        const ext = (selectedShotFile.name.split('.').pop() || 'jpg').toLowerCase().slice(0,5);
+        screenshotPath = `game_comments/${gameId}/${currentUser.uid}_${Date.now()}.${ext}`;
+        const sRef = ref(storage, screenshotPath);
+        await uploadBytes(sRef, selectedShotFile);
+        screenshotURL = await getDownloadURL(sRef);
+      }
       await addDoc(commentsCol(), {
-        body, nickname: currentNickname, userId: currentUser.uid, createdAt: serverTimestamp()
+        body, nickname: currentNickname, userId: currentUser.uid, createdAt: serverTimestamp(),
+        ...(screenshotURL ? { screenshotURL, screenshotPath } : {})
       });
       document.getElementById('comment-body').value = '';
+      selectedShotFile = null;
+      shotInput.value = '';
+      shotPreview.classList.add('hidden');
+      shotBtn.classList.remove('hidden');
       loadComments();
     } catch(e){
       alert('Gönderilemedi: ' + e.message);
     } finally {
       btn.disabled = false;
+      btn.textContent = originalLabel;
     }
   };
 
