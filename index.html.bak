@@ -164,22 +164,6 @@
     }
     .about-btn:hover { background: #fff; transform: translateY(-1px); }
 
-    .comment-btn {
-      display: inline-block;
-      text-decoration: none;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #fff;
-      background: transparent;
-      padding: 0.45rem 1.1rem;
-      border-radius: 4px;
-      border: 1px solid #333;
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s, transform 0.1s;
-      letter-spacing: 0.5px;
-    }
-    .comment-btn:hover { border-color: #4499ff; color: #4499ff; transform: translateY(-1px); }
-
     .game.upcoming .game-title { color: #333; }
     .game.upcoming .game-thumb.placeholder { opacity: 0.4; }
 
@@ -220,7 +204,6 @@
       <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
         <a class="download-btn" href="https://drive.google.com/file/d/1Oy-0oWPD6FbbiO4xHkypZ7gdzJuCmKm4/view?usp=drive_link">Download</a>
         <button class="about-btn" onclick="document.getElementById('popup-sko1').style.display='flex'">About</button>
-        <a class="comment-btn" href="comments.html?game=sko1">Yorumlar</a>
       </div>
     </div>
   </div>

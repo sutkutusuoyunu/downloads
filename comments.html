@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yorumlar — Süt Kutusu Oyunu</title>
+<style>
+  :root{
+    --bg:#0a0a10;
+    --panel:#121218;
+    --panel-2:#16161e;
+    --line:#242430;
+    --text:#e8e8ec;
+    --text-dim:#8a8a97;
+    --text-faint:#5c5c68;
+    --grad-a:#22d3ee;
+    --grad-b:#6d5bf5;
+    --grad-c:#c084fc;
+    --grad-warm-a:#f43f3f;
+    --grad-warm-b:#f59e0b;
+    --grad-warm-c:#84cc16;
+    --danger:#f0554f;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;
+    line-height:1.55;
+    position:relative;
+    overflow-x:hidden;
+  }
+  #stars{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+  .wrap{max-width:700px;margin:0 auto;padding:36px 20px 90px;position:relative;z-index:1;}
+  .back{
+    font-size:13px; text-decoration:none; color:var(--text-dim);
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .back:hover{color:var(--text);}
+
+  header.hero{margin:34px 0 30px;}
+  h1.grad{
+    font-size:clamp(28px,5.5vw,40px);
+    font-weight:800;
+    margin:0 0 8px;
+    letter-spacing:.2px;
+    background:linear-gradient(90deg, var(--grad-a), var(--grad-b) 55%, var(--grad-c));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .eyebrow{
+    margin:0;
+    font-size:12px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+  }
+  .hero-divider{
+    height:1px;
+    margin:26px 0 0;
+    background:linear-gradient(90deg, var(--grad-a), var(--grad-b), var(--grad-c), transparent);
+    opacity:.5;
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px;
+    margin-bottom:18px;
+  }
+  .panel h2{
+    margin:0 0 16px;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    font-weight:700;
+  }
+
+  textarea{
+    width:100%;
+    font-family:inherit;
+    font-size:14px;
+    padding:11px 13px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--panel-2);
+    color:var(--text);
+    resize:vertical;
+    min-height:80px;
+  }
+  textarea::placeholder{color:var(--text-faint);}
+  textarea:focus{ outline:none; border-color:var(--grad-b); }
+  .field{margin-bottom:14px;}
+
+  button{
+    font-family:inherit;
+    font-weight:600;
+    font-size:13.5px;
+    padding:10px 18px;
+    background:linear-gradient(90deg, var(--grad-a), var(--grad-b));
+    color:#08080c;
+    border:none;
+    border-radius:9px;
+    cursor:pointer;
+    transition:opacity .15s, transform .1s;
+  }
+  button:hover{opacity:.88;}
+  button:active{transform:translateY(1px);}
+  button:disabled{opacity:.4;cursor:not-allowed;}
+  button.ghost{
+    background:transparent;
+    color:var(--text-dim);
+    border:1px solid var(--line);
+  }
+  button.ghost:hover{color:var(--text); border-color:var(--text-faint); opacity:1;}
+
+  .post{
+    border-top:1px solid var(--line);
+    padding:16px 0;
+    display:flex;
+    gap:12px;
+  }
+  .post:first-child{border-top:none; padding-top:6px;}
+  .post-avatar{
+    width:36px; height:36px;
+    border-radius:50%;
+    object-fit:cover;
+    flex-shrink:0;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+  }
+  .post-content{min-width:0; flex:1;}
+  .post-meta{font-size:12px;color:var(--text-faint);margin-bottom:6px;display:flex;gap:10px;align-items:center;}
+  .post-body{white-space:pre-wrap;font-size:14px;color:var(--text);}
+  .avatar-xs{
+    width:20px; height:20px;
+    border-radius:50%;
+    object-fit:cover;
+    flex-shrink:0;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    vertical-align:middle;
+  }
+  .nick-badge{
+    font-weight:700;
+    background:linear-gradient(90deg, var(--grad-warm-a), var(--grad-warm-b), var(--grad-warm-c));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .small-link{font-size:12px;background:none;border:none;color:var(--text-faint);text-decoration:underline;cursor:pointer;padding:0;}
+  .small-link:hover{color:var(--danger);}
+  .empty{color:var(--text-faint);font-size:14px;padding:26px 0;text-align:center;}
+  footer{text-align:center;font-size:12px;color:var(--text-faint);margin-top:44px;}
+  .hidden{display:none !important;}
+  #status{font-size:13px;color:var(--text-faint);margin-bottom:14px;}
+  .nick-inline{font-size:12px;color:var(--text-faint);margin:-8px 0 18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .nick-inline .nick-badge{font-size:12px;}
+  .nick-inline button{padding:3px 10px;font-size:11px;}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="wrap">
+  <a class="back" href="https://sutkutusuoyunu.github.io/">← Geri</a>
+
+  <header class="hero">
+    <h1 class="grad" id="page-title">Yorumlar</h1>
+    <p class="eyebrow" id="page-eyebrow">Süt Kutusu Oyunu</p>
+    <div class="hero-divider"></div>
+  </header>
+
+  <div id="status">Bağlanıyor…</div>
+  <div class="nick-inline hidden" id="nick-bar"></div>
+
+  <div class="panel" id="comment-form-panel">
+    <h2>Yorum Yaz</h2>
+    <div id="comment-form">
+      <div class="field">
+        <textarea id="comment-body" maxlength="2000" placeholder="Bu oyun hakkında ne düşünüyorsun?"></textarea>
+      </div>
+      <button id="btn-comment">Gönder</button>
+    </div>
+    <p class="empty hidden" id="comment-locked" style="padding:6px 0;">Yorum yazmak için giriş yapmalısın.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Yorumlar</h2>
+    <div id="comments-list"></div>
+    <div class="empty hidden" id="comments-empty">Henüz yorum yok. İlk yorumu sen yaz!</div>
+  </div>
+
+  <footer>Süt Kutusu Oyunu Forumu, tüm haklar saklı</footer>
+</div>
+
+<script>
+// starfield background
+(function(){
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = document.body.scrollHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  const stars = Array.from({length:140}, () => ({
+    x: Math.random()*c.width, y: Math.random()*c.height,
+    r: Math.random()*1.4+0.3, o: Math.random()*0.6+0.2
+  }));
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    for (const s of stars){
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${s.o})`;
+      ctx.fill();
+    }
+  }
+  draw();
+  setInterval(()=>{ resize(); draw(); }, 4000);
+})();
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, collection, doc, addDoc, getDocs, getDoc,
+  deleteDoc, query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* =========================================================
+   FIREBASE CONFIG (same project as forum/login)
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBafL4x-ANrbA8x9iPjIXvT57d6H0oJnuo",
+  authDomain: "sutkutusuoyunu.firebaseapp.com",
+  projectId: "sutkutusuoyunu",
+  storageBucket: "sutkutusuoyunu.firebasestorage.app",
+  messagingSenderId: "432642434528",
+  appId: "1:432642434528:web:01701181fb552769cef785"
+};
+
+const LOGIN_URL = 'https://sutkutusuoyunu.github.io/login/';
+
+// Known games, keyed by the ?game= URL param. Add new entries here as
+// more games launch — this also validates the param so people can't
+// spin up an arbitrary comment thread with a bogus game id.
+const GAMES = {
+  sko1: { title: 'Süt Kutusu Oyunu 1' },
+  sko2: { title: 'Süt Kutusu Oyunu 2' },
+  sko3: { title: 'Süt Kutusu Oyunu 3' },
+  sko4: { title: 'Süt Kutusu Oyunu 4' },
+  sko5: { title: 'Süt Kutusu Oyunu 5' },
+  sko6: { title: 'Süt Kutusu Oyunu 6' },
+};
+
+const params = new URLSearchParams(location.search);
+const gameId = params.get('game');
+const game = gameId && GAMES[gameId] ? GAMES[gameId] : null;
+
+const DEFAULT_AVATAR =
+  'data:image/svg+xml;utf8,' + encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+      <rect width="40" height="40" rx="20" fill="#16161e"/>
+      <circle cx="20" cy="15.5" r="6.5" fill="#5c5c68"/>
+      <path d="M8 34c1.5-8 8-11.5 12-11.5S30.5 26 32 34" fill="#5c5c68"/>
+    </svg>`);
+
+const statusEl = document.getElementById('status');
+
+if (!game){
+  statusEl.textContent = 'Geçersiz veya eksik oyun. Lütfen indirme sayfasından tekrar dene.';
+} else {
+  document.getElementById('page-title').textContent = 'Yorumlar';
+  document.getElementById('page-eyebrow').textContent = game.title;
+  document.title = `Yorumlar — ${game.title}`;
+  initComments();
+}
+
+function initComments(){
+  let app, db, auth;
+  let firebaseReady = false;
+  try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    auth = getAuth(app);
+    firebaseReady = true;
+  } catch (e) {
+    console.error("Firebase init failed", e);
+  }
+
+  const commentsCol = () => collection(db, 'game_comments', gameId, 'comments');
+
+  let currentUser = null;
+  let currentNickname = null;
+  let currentAvatar = null;
+
+  const userProfileCache = new Map();
+  async function getUserProfile(uid){
+    if (!uid) return { nickname: 'anonim', photoURL: null };
+    if (userProfileCache.has(uid)) return userProfileCache.get(uid);
+    let profile = { nickname: 'anonim', photoURL: null };
+    try {
+      const snap = await getDoc(doc(db, 'users', uid));
+      if (snap.exists()){
+        const d = snap.data();
+        profile = { nickname: d.nickname || 'anonim', photoURL: d.photoURL || null };
+      }
+    } catch(e){
+      console.warn('getUserProfile error:', e);
+    }
+    userProfileCache.set(uid, profile);
+    return profile;
+  }
+
+  function escapeHtml(s){
+    return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function timeAgo(ts){
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    const diff = (Date.now() - d.getTime())/1000;
+    if (diff < 60) return 'az önce';
+    if (diff < 3600) return Math.floor(diff/60)+' dk önce';
+    if (diff < 86400) return Math.floor(diff/3600)+' sa önce';
+    return d.toLocaleDateString('tr-TR');
+  }
+  function avatarSrc(url){ return url || DEFAULT_AVATAR; }
+
+  function renderNickBar(){
+    const bar = document.getElementById('nick-bar');
+    bar.classList.remove('hidden');
+    if (currentUser){
+      bar.innerHTML = `
+        <img class="avatar-xs" src="${escapeHtml(avatarSrc(currentAvatar))}" alt="">
+        Giriş yapan: <span class="nick-badge">${escapeHtml(currentNickname)}</span>
+        <button class="ghost" id="btn-signout">Çıkış Yap</button>`;
+      document.getElementById('btn-signout').onclick = () => signOut(auth);
+    } else {
+      bar.innerHTML = `Yorum yazmak için <button class="ghost" id="btn-goto-login">giriş yap</button>`;
+      document.getElementById('btn-goto-login').onclick = () => {
+        location.href = `${LOGIN_URL}?next=${encodeURIComponent(location.href)}`;
+      };
+    }
+    document.getElementById('comment-form').classList.toggle('hidden', !currentUser);
+    document.getElementById('comment-locked').classList.toggle('hidden', !!currentUser);
+  }
+
+  async function loadComments(){
+    const el = document.getElementById('comments-list');
+    const emptyEl = document.getElementById('comments-empty');
+    el.innerHTML = '<div class="empty">Yükleniyor…</div>';
+    try {
+      const q = query(commentsCol(), orderBy('createdAt','asc'));
+      const snap = await getDocs(q);
+      el.innerHTML = '';
+      if (snap.empty){
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+      emptyEl.classList.add('hidden');
+      const rows = await Promise.all(snap.docs.map(async d => {
+        const c = d.data();
+        const profile = await getUserProfile(c.userId);
+        return { id: d.id, c, profile };
+      }));
+      rows.forEach(({id, c, profile}) => {
+        const isMine = currentUser && c.userId === currentUser.uid;
+        const div = document.createElement('div');
+        div.className = 'post';
+        div.innerHTML = `
+          <img class="post-avatar" src="${escapeHtml(avatarSrc(profile.photoURL))}" alt="">
+          <div class="post-content">
+            <div class="post-meta">
+              <span class="nick-badge">${escapeHtml(profile.nickname || c.nickname || 'anonim')}</span>
+              <span>${timeAgo(c.createdAt)}</span>
+              ${isMine ? `<button class="small-link" data-comment="${id}">sil</button>` : ''}
+            </div>
+            <div class="post-body">${escapeHtml(c.body)}</div>
+          </div>`;
+        if (isMine){
+          div.querySelector('[data-comment]').onclick = () => deleteOwnComment(id);
+        }
+        el.appendChild(div);
+      });
+    } catch(e){
+      el.innerHTML = `<div class="empty">Yüklenemedi: ${escapeHtml(e.message)}</div>`;
+    }
+  }
+
+  async function deleteOwnComment(commentId){
+    if (!confirm('Bu yorumu silmek istediğine emin misin?')) return;
+    try {
+      await deleteDoc(doc(db, 'game_comments', gameId, 'comments', commentId));
+      loadComments();
+    } catch(e){
+      alert('Silinemedi: ' + e.message);
+    }
+  }
+
+  document.getElementById('btn-comment').onclick = async () => {
+    if (!currentUser) return;
+    const body = document.getElementById('comment-body').value.trim();
+    if (!body) return;
+    const btn = document.getElementById('btn-comment');
+    btn.disabled = true;
+    try {
+      await addDoc(commentsCol(), {
+        body, nickname: currentNickname, userId: currentUser.uid, createdAt: serverTimestamp()
+      });
+      document.getElementById('comment-body').value = '';
+      loadComments();
+    } catch(e){
+      alert('Gönderilemedi: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  if (firebaseReady){
+    onAuthStateChanged(auth, async (user) => {
+      if (!user){
+        currentUser = null;
+        currentNickname = null;
+        currentAvatar = null;
+        statusEl.textContent = '';
+        renderNickBar();
+        loadComments();
+        return;
+      }
+      currentUser = user;
+      try {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        const d = snap.exists() ? snap.data() : {};
+        currentNickname = d.nickname || user.email;
+        currentAvatar = d.photoURL || null;
+        userProfileCache.set(user.uid, { nickname: currentNickname, photoURL: currentAvatar });
+      } catch(e){
+        console.warn('Profile load error:', e);
+        currentNickname = user.email;
+        currentAvatar = null;
+      }
+      statusEl.textContent = '';
+      renderNickBar();
+      loadComments();
+    });
+  } else {
+    statusEl.textContent = 'Firebase yapılandırması eksik.';
+  }
+}
+</script>
+</body>
+</html>
