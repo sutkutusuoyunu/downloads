@@ -25,7 +25,11 @@
   html,body{height:100%;}
   body{
     margin:0;
-    background:var(--bg);
+    background-color:var(--bg);
+    background-image:linear-gradient(rgba(10,10,16,0.92), rgba(10,10,16,0.92)), url('background.png');
+    background-size:cover;
+    background-position:center;
+    background-attachment:fixed;
     color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;
     line-height:1.55;
@@ -63,6 +67,52 @@
     margin:26px 0 0;
     background:linear-gradient(90deg, var(--grad-a), var(--grad-b), var(--grad-c), transparent);
     opacity:.5;
+  }
+
+  /* game info card */
+  .game-header{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:18px;
+    display:grid;
+    grid-template-columns:120px 1fr;
+    gap:18px;
+    align-items:start;
+  }
+  .game-header-thumb{
+    width:120px;
+    height:80px;
+    border-radius:8px;
+    object-fit:cover;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    display:block;
+  }
+  .game-header-thumb.placeholder{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-faint);
+    font-size:.65rem;
+    letter-spacing:1px;
+    text-transform:uppercase;
+  }
+  .game-header-title{
+    font-size:1.05rem;
+    font-weight:700;
+    color:var(--text);
+    margin-bottom:6px;
+  }
+  .game-header-desc{
+    font-size:.85rem;
+    color:var(--text-dim);
+    line-height:1.6;
+  }
+  @media (max-width:480px){
+    .game-header{ grid-template-columns:1fr; }
+    .game-header-thumb{ width:100%; height:140px; }
   }
 
   .panel{
@@ -174,6 +224,15 @@
   </header>
 
   <div id="status">Bağlanıyor…</div>
+
+  <div class="game-header hidden" id="game-header">
+    <img class="game-header-thumb" id="game-header-thumb" src="" alt="">
+    <div>
+      <div class="game-header-title" id="game-header-title"></div>
+      <div class="game-header-desc" id="game-header-desc"></div>
+    </div>
+  </div>
+
   <div class="nick-inline hidden" id="nick-bar"></div>
 
   <div class="panel" id="comment-form-panel">
@@ -249,13 +308,15 @@ const LOGIN_URL = 'https://sutkutusuoyunu.github.io/login/';
 // Known games, keyed by the ?game= URL param. Add new entries here as
 // more games launch — this also validates the param so people can't
 // spin up an arbitrary comment thread with a bogus game id.
+// `image` should point at the same thumbnail used on the downloads page
+// (e.g. "game1.jpg"); leave it empty to fall back to a placeholder box.
 const GAMES = {
-  sko1: { title: 'Süt Kutusu Oyunu 1' },
-  sko2: { title: 'Süt Kutusu Oyunu 2' },
-  sko3: { title: 'Süt Kutusu Oyunu 3' },
-  sko4: { title: 'Süt Kutusu Oyunu 4' },
-  sko5: { title: 'Süt Kutusu Oyunu 5' },
-  sko6: { title: 'Süt Kutusu Oyunu 6' },
+  sko1: { title: 'Süt Kutusu Oyunu 1', desc: 'Paşa süt kutusunu camdan aşağı atıyor.', image: 'game1.jpg' },
+  sko2: { title: 'Süt Kutusu Oyunu 2', desc: 'Coming soon.', image: '' },
+  sko3: { title: 'Süt Kutusu Oyunu 3', desc: 'Coming soon.', image: '' },
+  sko4: { title: 'Süt Kutusu Oyunu 4', desc: 'Coming soon.', image: '' },
+  sko5: { title: 'Süt Kutusu Oyunu 5', desc: 'Coming soon.', image: '' },
+  sko6: { title: 'Süt Kutusu Oyunu 6', desc: 'Coming soon.', image: '' },
 };
 
 const params = new URLSearchParams(location.search);
@@ -278,7 +339,33 @@ if (!game){
   document.getElementById('page-title').textContent = 'Yorumlar';
   document.getElementById('page-eyebrow').textContent = game.title;
   document.title = `Yorumlar — ${game.title}`;
+  renderGameHeader(game);
   initComments();
+}
+
+function renderGameHeader(game){
+  const headerEl = document.getElementById('game-header');
+  const thumbEl = document.getElementById('game-header-thumb');
+  const titleEl = document.getElementById('game-header-title');
+  const descEl = document.getElementById('game-header-desc');
+
+  titleEl.textContent = game.title;
+  descEl.textContent = game.desc || '';
+
+  if (game.image){
+    thumbEl.src = game.image;
+    thumbEl.alt = game.title;
+    thumbEl.classList.remove('placeholder');
+    thumbEl.onerror = () => {
+      thumbEl.classList.add('placeholder');
+      thumbEl.removeAttribute('src');
+    };
+  } else {
+    thumbEl.classList.add('placeholder');
+    thumbEl.removeAttribute('src');
+  }
+
+  headerEl.classList.remove('hidden');
 }
 
 function initComments(){
