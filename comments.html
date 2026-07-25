@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Yorumlar! Süt Kutusu Oyunu</title>
+<title>Yorumlar — Süt Kutusu Oyunu</title>
 <style>
   :root{
     --bg:#0a0a10;
@@ -335,9 +335,6 @@ import {
   getFirestore, collection, doc, addDoc, getDocs, getDoc,
   deleteDoc, query, orderBy, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {
-  getStorage, ref, uploadBytes, getDownloadURL, deleteObject
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 /* =========================================================
    FIREBASE CONFIG (same project as forum/login)
@@ -351,12 +348,53 @@ const firebaseConfig = {
   appId: "1:432642434528:web:01701181fb552769cef785"
 };
 
+/* =========================================================
+   CLOUDINARY CONFIG (image hosting for comment/gallery screenshots)
+   Uses an unsigned upload preset, so no API secret is ever exposed
+   client-side. Deletions only remove the Firestore reference — the
+   asset itself stays in your Cloudinary media library until you
+   clean it up there, since unsigned uploads can't securely delete.
+   ========================================================= */
+const CLOUDINARY_CLOUD_NAME = 'sa2ybt90';
+const CLOUDINARY_UPLOAD_PRESET = 'pictures';
+const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+
+async function uploadToCloudinary(file, timeoutMs = 25000){
+  const form = new FormData();
+  form.append('file', file);
+  form.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(CLOUDINARY_UPLOAD_URL, {
+      method: 'POST',
+      body: form,
+      signal: controller.signal
+    });
+    if (!res.ok){
+      let msg = `Cloudinary yükleme hatası (${res.status})`;
+      try { const j = await res.json(); if (j?.error?.message) msg = j.error.message; } catch(_){}
+      throw new Error(msg);
+    }
+    const data = await res.json();
+    return { url: data.secure_url, publicId: data.public_id };
+  } catch(e){
+    if (e.name === 'AbortError'){
+      throw new Error('Resim yükleme zaman aşımına uğradı. Bağlantını kontrol et.');
+    }
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 const LOGIN_URL = 'https://sutkutusuoyunu.github.io/login/';
 
 // The only account allowed to upload/delete in-game screenshots in the
 // gallery below the about section. This is a UI-level gate only — the
-// real enforcement must happen in Firestore/Storage security rules
-// (see the rules snippet at the bottom of this file's comments).
+// real enforcement must happen in Firestore security rules (see the
+// rules snippet mentioned in chat).
 const ADMIN_NICKNAME = 'artful617';
 
 // Known games, keyed by the ?game= URL param. Add new entries here as
@@ -435,13 +473,12 @@ function renderGameHeader(game){
 }
 
 function initComments(){
-  let app, db, auth, storage;
+  let app, db, auth;
   let firebaseReady = false;
   try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     auth = getAuth(app);
-    storage = getStorage(app);
     firebaseReady = true;
   } catch (e) {
     console.error("Firebase init failed", e);
@@ -449,16 +486,6 @@ function initComments(){
 
   const commentsCol = () => collection(db, 'game_comments', gameId, 'comments');
   const shotsCol = () => collection(db, 'game_screenshots', gameId, 'shots');
-
-  // Wraps a promise so an upload that never resolves (bad bucket config,
-  // dropped connection, etc.) can't leave a button stuck on its loading
-  // label forever.
-  function withTimeout(promise, ms, label){
-    return Promise.race([
-      promise,
-      new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} zaman aşımına uğradı. Bağlantını veya Firebase Storage ayarlarını kontrol et.`)), ms))
-    ]);
-  }
 
   let currentUser = null;
   let currentNickname = null;
@@ -540,7 +567,7 @@ function initComments(){
           if (isAdmin()){
             wrap.querySelector('.shot-thumb-del').onclick = (e) => {
               e.stopPropagation();
-              deleteScreenshot(d.id, s.storagePath);
+              deleteScreenshot(d.id);
             };
           }
           shotsGrid.appendChild(wrap);
@@ -552,13 +579,10 @@ function initComments(){
     adminUploadRow.classList.toggle('hidden', !isAdmin());
   }
 
-  async function deleteScreenshot(shotId, storagePath){
-    if (!confirm('Bu ekran görüntüsünü silmek istediğine emin misin?')) return;
+  async function deleteScreenshot(shotId){
+    if (!confirm('Bu ekran görüntüsünü silmek istediğine emin misin? (Görsel Cloudinary\'de kalır, sadece galeriden kaldırılır)')) return;
     try {
       await deleteDoc(doc(db, 'game_screenshots', gameId, 'shots', shotId));
-      if (storagePath){
-        try { await deleteObject(ref(storage, storagePath)); } catch(e){ console.warn('shot storage delete failed', e); }
-      }
       loadScreenshots();
     } catch(e){
       alert('Silinemedi: ' + e.message);
@@ -586,13 +610,9 @@ function initComments(){
     adminAddShotBtn.disabled = true;
     adminAddShotBtn.textContent = 'Yükleniyor…';
     try {
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().slice(0,5);
-      const storagePath = `game_screenshots/${gameId}/${Date.now()}_${currentUser.uid}.${ext}`;
-      const sRef = ref(storage, storagePath);
-      await withTimeout(uploadBytes(sRef, file), 30000, 'Resim yükleme');
-      const imageURL = await withTimeout(getDownloadURL(sRef), 15000, 'Resim bağlantısı alma');
+      const { url, publicId } = await uploadToCloudinary(file);
       await addDoc(shotsCol(), {
-        imageURL, storagePath, uploadedBy: currentUser.uid, createdAt: serverTimestamp()
+        imageURL: url, cloudinaryId: publicId || null, uploadedBy: currentUser.uid, createdAt: serverTimestamp()
       });
       loadScreenshots();
     } catch(e){
@@ -688,7 +708,7 @@ function initComments(){
             ${c.screenshotURL ? `<img class="post-screenshot" data-full="${escapeHtml(c.screenshotURL)}" src="${escapeHtml(c.screenshotURL)}" alt="ekran görüntüsü">` : ''}
           </div>`;
         if (isMine){
-          div.querySelector('[data-comment]').onclick = () => deleteOwnComment(id, c.screenshotPath);
+          div.querySelector('[data-comment]').onclick = () => deleteOwnComment(id);
         }
         const shotImg = div.querySelector('.post-screenshot');
         if (shotImg){
@@ -701,13 +721,10 @@ function initComments(){
     }
   }
 
-  async function deleteOwnComment(commentId, screenshotPath){
+  async function deleteOwnComment(commentId){
     if (!confirm('Bu yorumu silmek istediğine emin misin?')) return;
     try {
       await deleteDoc(doc(db, 'game_comments', gameId, 'comments', commentId));
-      if (screenshotPath){
-        try { await deleteObject(ref(storage, screenshotPath)); } catch(e){ console.warn('screenshot delete failed', e); }
-      }
       loadComments();
     } catch(e){
       alert('Silinemedi: ' + e.message);
@@ -723,18 +740,16 @@ function initComments(){
     const originalLabel = btn.textContent;
     try {
       let screenshotURL = null;
-      let screenshotPath = null;
+      let cloudinaryId = null;
       if (selectedShotFile){
         btn.textContent = 'Yükleniyor…';
-        const ext = (selectedShotFile.name.split('.').pop() || 'jpg').toLowerCase().slice(0,5);
-        screenshotPath = `game_comments/${gameId}/${currentUser.uid}_${Date.now()}.${ext}`;
-        const sRef = ref(storage, screenshotPath);
-        await withTimeout(uploadBytes(sRef, selectedShotFile), 25000, 'Resim yükleme');
-        screenshotURL = await withTimeout(getDownloadURL(sRef), 15000, 'Resim bağlantısı alma');
+        const uploaded = await uploadToCloudinary(selectedShotFile);
+        screenshotURL = uploaded.url;
+        cloudinaryId = uploaded.publicId || null;
       }
       await addDoc(commentsCol(), {
         body, nickname: currentNickname, userId: currentUser.uid, createdAt: serverTimestamp(),
-        ...(screenshotURL ? { screenshotURL, screenshotPath } : {})
+        ...(screenshotURL ? { screenshotURL, cloudinaryId } : {})
       });
       document.getElementById('comment-body').value = '';
       selectedShotFile = null;
