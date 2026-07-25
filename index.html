@@ -148,26 +148,106 @@
       cursor: not-allowed;
       border: 1px solid #222;
     }
-    .download-btn.disabled:hover { transform: none; background: #000000; }
+    .download-btn.disabled:hover { transform: none; background: #1a1a1a; }
 
     .comment-btn {
       display: inline-block;
       text-decoration: none;
       font-size: 0.85rem;
       font-weight: 700;
-      color: #000000;
-      background: #090909;
+      color: #fff;
+      background: transparent;
       padding: 0.45rem 1.1rem;
       border-radius: 4px;
-      border: 1px solid #000000;
+      border: 1px solid #333;
       cursor: pointer;
       transition: border-color 0.15s, color 0.15s, transform 0.1s;
       letter-spacing: 0.5px;
     }
-    .comment-btn:hover { border-color: #000000; color: #090909; transform: translateY(-1px); }
+    .comment-btn:hover { border-color: #4499ff; color: #4499ff; transform: translateY(-1px); }
 
     .game.upcoming .game-title { color: #333; }
     .game.upcoming .game-thumb.placeholder { opacity: 0.4; }
+
+    .dl-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .dl-modal.open { display: flex; }
+    .dl-modal-box {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      max-width: 380px;
+      width: 100%;
+      padding: 2rem;
+      position: relative;
+    }
+    .dl-modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: #555;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    .dl-modal-close:hover { color: #fff; }
+    .dl-modal-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 1.4rem;
+    }
+    .dl-modal-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .dl-option {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      text-decoration: none;
+      border: 1px solid #262626;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    }
+    .dl-option:hover {
+      border-color: #00ff11;
+      background: #151515;
+      transform: translateY(-1px);
+    }
+    .dl-option.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .dl-option-icon {
+      font-size: 1.4rem;
+      width: 2rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .dl-option-text { flex: 1; }
+    .dl-option-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .dl-option-sub {
+      font-size: 0.75rem;
+      color: #555;
+      margin-top: 2px;
+    }
 
     @media (max-width: 480px) {
       .game { grid-template-columns: 1fr; }
@@ -204,8 +284,32 @@
         <span class="badge ready">~201 MB</span>
       </div>
       <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
-        <a class="download-btn" href="https://drive.google.com/file/d/1Oy-0oWPD6FbbiO4xHkypZ7gdzJuCmKm4/view?usp=drive_link">Download</a>
+        <button type="button" class="download-btn" style="border:none;font-family:inherit;cursor:pointer;" onclick="document.getElementById('dl-modal-sko1').classList.add('open')">Download</button>
         <a class="comment-btn" href="comments.html?game=sko1">Detaylar &amp; Yorumlar</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SKO1 DOWNLOAD MODAL — edit the hrefs below when you have the APK link -->
+  <div id="dl-modal-sko1" class="dl-modal">
+    <div class="dl-modal-box">
+      <button class="dl-modal-close" onclick="document.getElementById('dl-modal-sko1').classList.remove('open')">&#x2715;</button>
+      <div class="dl-modal-title">Süt Kutusu Oyunu 1 — İndir</div>
+      <div class="dl-modal-options">
+        <a class="dl-option" href="https://drive.google.com/file/d/1Oy-0oWPD6FbbiO4xHkypZ7gdzJuCmKm4/view?usp=drive_link">
+          <span class="dl-option-icon">&#x1F5A5;&#xFE0F;</span>
+          <span class="dl-option-text">
+            <div class="dl-option-title">PC için indir</div>
+            <div class="dl-option-sub">Windows &middot; ~201 MB</div>
+          </span>
+        </a>
+        <a class="dl-option" href="#">
+          <span class="dl-option-icon">&#x1F4F1;</span>
+          <span class="dl-option-text">
+            <div class="dl-option-title">Mobil için indir</div>
+            <div class="dl-option-sub">APK &middot; yakında</div>
+          </span>
+        </a>
       </div>
     </div>
   </div>
@@ -271,5 +375,10 @@
   </div>
 
 </div>
+<script>
+  document.querySelectorAll('.dl-modal').forEach(m => {
+    m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('open'); });
+  });
+</script>
 </body>
 </html>
