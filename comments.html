@@ -202,6 +202,7 @@
   .nick-inline{font-size:12px;color:var(--text-faint);margin:-8px 0 18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .nick-inline .nick-badge{font-size:12px;}
   .nick-inline button{padding:3px 10px;font-size:11px;}
+  .cap-note{font-size:11.5px;color:var(--text-faint);margin-top:8px;}
 
   .shot-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
   .shot-btn{
@@ -332,7 +333,7 @@ import {
   getAuth, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore, collection, doc, addDoc, getDocs, getDoc,
+  getFirestore, collection, doc, addDoc, writeBatch, getDocs, getDoc,
   deleteDoc, query, orderBy, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -392,10 +393,11 @@ async function uploadToCloudinary(file, timeoutMs = 25000){
 const LOGIN_URL = 'https://sutkutusuoyunu.github.io/login/';
 
 // The only account allowed to upload/delete in-game screenshots in the
-// gallery below the about section. This is a UI-level gate only — the
-// real enforcement must happen in Firestore security rules (see the
-// rules snippet mentioned in chat).
+// gallery below the about section. This label is for UI display only —
+// the real enforcement is in firestore.rules, gated on the fixed UID
+// kmNZpQn2U9UF4Sn1TlZpT4UvipV2 (artful617@gmail.com), not this nickname.
 const ADMIN_NICKNAME = 'artful617';
+const ADMIN_UID = 'kmNZpQn2U9UF4Sn1TlZpT4UvipV2';
 
 // Known games, keyed by the ?game= URL param. Add new entries here as
 // more games launch — this also validates the param so people can't
@@ -492,6 +494,13 @@ function initComments(){
   let currentAvatar = null;
   let selectedShotFile = null;
 
+  // Local mirror of the caller's daily post-cap counter, loaded from
+  // users/{uid} at sign-in and kept in sync after each successful comment.
+  // The server-side source of truth is always users/{uid}.postCount /
+  // postCountDate, enforced by firestore.rules.
+  let currentPostCount = 0;
+  let currentPostCountDate = null;
+
   const shotInput = document.getElementById('comment-shot-input');
   const shotBtn = document.getElementById('btn-add-shot');
   const shotPreview = document.getElementById('shot-preview');
@@ -541,7 +550,11 @@ function initComments(){
   const adminAddShotBtn = document.getElementById('btn-admin-add-shot');
 
   function isAdmin(){
-    return !!currentUser && currentNickname === ADMIN_NICKNAME;
+    // UI-level gate only, purely for showing/hiding the upload controls.
+    // Real enforcement is firestore.rules checking request.auth.uid ==
+    // ADMIN_UID directly, so this being spoofed client-side can't grant
+    // an actual write.
+    return !!currentUser && currentUser.uid === ADMIN_UID;
   }
 
   async function loadScreenshots(){
@@ -639,6 +652,41 @@ function initComments(){
     }
     userProfileCache.set(uid, profile);
     return profile;
+  }
+
+  /**
+   * Creates a document while atomically bumping the caller's daily post
+   * counter. Required because firestore.rules only allows comment creates
+   * when paired, in the same batch, with a valid counter update on
+   * users/{uid} (see underDailyCap() / validPostCounter() in
+   * firestore.rules). If the daily cap (100/day) has already been hit,
+   * the batch is rejected by the rules and this throws a
+   * permission-denied error — callers should catch that and show a
+   * friendly message.
+   */
+  async function createWithDailyCap(targetCol, data){
+    const today = new Date().toISOString().substring(0, 10); // "YYYY-MM-DD"
+    const newCount = (currentPostCountDate === today) ? currentPostCount + 1 : 1;
+
+    const batch = writeBatch(db);
+    const contentRef = doc(targetCol);
+    batch.set(contentRef, data);
+    batch.update(doc(db, 'users', currentUser.uid), {
+      postCount: newCount,
+      postCountDate: today
+    });
+    await batch.commit();
+
+    currentPostCount = newCount;
+    currentPostCountDate = today;
+    return contentRef;
+  }
+
+  function friendlyPostError(e){
+    if (e && e.code === 'permission-denied'){
+      return 'Günlük mesaj limitine ulaştın (100). Yarın tekrar dene.';
+    }
+    return e && e.message ? e.message : String(e);
   }
 
   function escapeHtml(s){
@@ -747,7 +795,7 @@ function initComments(){
         screenshotURL = uploaded.url;
         cloudinaryId = uploaded.publicId || null;
       }
-      await addDoc(commentsCol(), {
+      await createWithDailyCap(commentsCol(), {
         body, nickname: currentNickname, userId: currentUser.uid, createdAt: serverTimestamp(),
         ...(screenshotURL ? { screenshotURL, cloudinaryId } : {})
       });
@@ -758,7 +806,7 @@ function initComments(){
       shotBtn.classList.remove('hidden');
       loadComments();
     } catch(e){
-      alert('Gönderilemedi: ' + e.message);
+      alert('Gönderilemedi: ' + friendlyPostError(e));
     } finally {
       btn.disabled = false;
       btn.textContent = originalLabel;
@@ -771,6 +819,8 @@ function initComments(){
         currentUser = null;
         currentNickname = null;
         currentAvatar = null;
+        currentPostCount = 0;
+        currentPostCountDate = null;
         statusEl.textContent = '';
         renderNickBar();
         loadComments();
@@ -783,6 +833,8 @@ function initComments(){
         const d = snap.exists() ? snap.data() : {};
         currentNickname = d.nickname || user.email;
         currentAvatar = d.photoURL || null;
+        currentPostCount = d.postCount || 0;
+        currentPostCountDate = d.postCountDate || null;
         userProfileCache.set(user.uid, { nickname: currentNickname, photoURL: currentAvatar });
       } catch(e){
         console.warn('Profile load error:', e);
