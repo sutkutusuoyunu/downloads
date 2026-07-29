@@ -665,7 +665,10 @@ function initComments(){
    * friendly message.
    */
   async function createWithDailyCap(targetCol, data){
-    const today = new Date().toISOString().substring(0, 10); // "YYYY-MM-DD"
+    // Must match todayKey() in firestore.rules exactly: unpadded "YYYY-M-D"
+    // in UTC (not toISOString's zero-padded format, and not local time).
+    const now = new Date();
+    const today = `${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${now.getUTCDate()}`;
     const newCount = (currentPostCountDate === today) ? currentPostCount + 1 : 1;
 
     const batch = writeBatch(db);
